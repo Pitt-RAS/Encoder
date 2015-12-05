@@ -138,9 +138,9 @@ public:
         } else {
             noInterrupts();
         }
-        float ret = encoder.rate;
+        int32_t lastPosition = encoder.position;
         interrupts();
-        return ret;
+        return ((extrapolate() - lastPosition) / encoder.stepTime);
     }
     inline float extrapolate() {
         if (interrupts_in_use < 2) {
@@ -168,7 +168,7 @@ public:
 		encoder.position = p;
 	}
     inline float stepRate() {
-        return encoder.rate;
+        return ((extrapolate() - encoder.position) / encoder.stepTime);
     }
     inline float extrapolate() {
         float extrapolation = encoder.rate * encoder.stepTime;
