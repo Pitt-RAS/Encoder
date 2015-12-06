@@ -72,6 +72,7 @@ typedef struct {
     float rate;
     float rate1;
     float rate2;
+    bool lastRateTimer;
 } Encoder_internal_state_t;
 
 class Encoder
@@ -103,6 +104,7 @@ public:
         encoder.rate = 0;
         encoder.rate1 = 0;
         encoder.rate2 = 0;
+        lastRateTimer = 0;
 		if (DIRECT_PIN_READ(encoder.pin1_register, encoder.pin1_bitmask)) s |= 1;
 		if (DIRECT_PIN_READ(encoder.pin2_register, encoder.pin2_bitmask)) s |= 2;
 		encoder.state = s;
@@ -135,25 +137,30 @@ public:
         if (interrupts_in_use < 2) {
             noInterrupts();
             update(&encoder);
-        } else {
+        }
+        else {
             noInterrupts();
         }
-        loat lastRate = encoder.rate;
+        float lastRate = encoder.rate;
         float elapsedTime = encoder.stepTime;
         interrupts();
         float extrapolation = lastRate * elapsedTime;
-        if (extrapolation > 1)
+        if (extrapolation > 1) {
             return (1 / elapsedTime);
-        else if (extrapolation < -1)
+        }
+        else if (extrapolation < -1) {
             return (-1 / elapsedTime);
-        else
+        }
+        else {
             return (lastRate);
+        }
     }
     inline float extrapolate() {
         if (interrupts_in_use < 2) {
             noInterrupts();
             update(&encoder);
-        } else {
+        }
+        else {
             noInterrupts();
         }
         float lastRate = encoder.rate;
@@ -161,10 +168,12 @@ public:
         float extrapolation = encoder.stepTime;
         interrupts();
         extrapolation *= lastRate;
-        if (extrapolation > 1)
+        if (extrapolation > 1) {
             extrapolation = 1;
-        else if (extrapolation < -1)
+        }
+        else if (extrapolation < -1) {
             extrapolation = -1;
+        }
         return (extrapolation + lastPosition);
     }
 #else
@@ -180,10 +189,12 @@ public:
     }
     inline float extrapolate() {
         float extrapolation = encoder.rate * encoder.stepTime;
-        if (extrapolation > 1)
+        if (extrapolation > 1) {
             extrapolation = 1;
-        else if (extrapolation < -1)
+        }
+        else if (extrapolation < -1) {
             extrapolation = -1;
+        }
         return (extrapolation + encoder.position);
     }
 #endif
@@ -342,9 +353,17 @@ public:
 			case 1: case 7: case 8: case 14:
                 if (arg->position % 2 == 0) {
                     arg->rate1 = 0.5 / arg->stepTime;
+                    if (arg->lastRateTimer == 0) {
+                        arg->rate2 = 0;
+                    }
+                    arg->lastRateTimer = 0;
                 }
                 else {
                     arg->rate2 = 0.5 / arg->stepTime;
+                    if (arg->lastRateTimer == 1) {
+                        arg->rate1 = 0;
+                    }
+                    arg->lastRateTimer = 1;
                 }
                 arg->stepTime = 0;
                 arg->rate = (arg->rate1 + arg->rate2);
@@ -353,9 +372,17 @@ public:
 			case 2: case 4: case 11: case 13:
                 if (arg->position % 2 != 0) {
                     arg->rate1 = -0.5 / arg->stepTime;
+                    if (arg->lastRateTimer == 0) {
+                        arg->rate2 = 0;
+                    }
+                    arg->lastRateTimer = 0;
                 }
                 else {
                     arg->rate2 = -0.5 / arg->stepTime;
+                    if (arg->lastRateTimer == 1) {
+                        arg->rate1 = 0;
+                    }
+                    arg->lastRateTimer = 1;
                 }
                 arg->stepTime = 0;
                 arg->rate = (arg->rate1 + arg->rate2);
