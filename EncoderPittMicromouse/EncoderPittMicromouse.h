@@ -26,8 +26,12 @@
  */
 
 
-#ifndef Encoder_h_
-#define Encoder_h_
+#ifndef Encoder_PITT_MICROMOUSE_h_
+#define Encoder_PITT_MICROMOUSE_h_
+
+#define PITT_MICROMOUSE_ENCODER_PATCH_VERSION 1
+
+#define Encoder EncoderPittMicromouse
 
 #if defined(ARDUINO) && ARDUINO >= 100
 #include "Arduino.h"
@@ -947,5 +951,7 @@ ISR(INT7_vect) { Encoder::update(Encoder::interruptArgs[SCRAMBLE_INT_ORDER(7)]);
 #endif
 #endif // ENCODER_OPTIMIZE_INTERRUPTS
 
+
+#undef Encoder
 
 #endif
